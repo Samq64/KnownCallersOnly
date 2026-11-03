@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Known Callers</string>
+    <string name="toggle">Allow known callers only</string>
+    <string name="description">Anyone outside of this device\'s contacts list is silently declined. Voicemail, call logs and apps such as WhatsApp are unaffected.</string>
+    <string name="permissions">Permissions</string>
+    <string name="perm_contacts">Contacts access</string>
+    <string name="perm_role">Call screening</string>
+    <string name="grant">Grant</string>
+    <string name="status_granted">%1$s: granted</string>
+    <string name="status_missing">%1$s: not granted</string>
+    <string name="builtin_note"><b>Tip:</b> Check if your Phone app already has this setting built in. Options like \"Block unidentified callers\" usually only apply to hidden numbers, not unknown ones.</string>
+</resources>
