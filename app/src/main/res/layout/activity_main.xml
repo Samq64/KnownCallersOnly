@@ -41,6 +41,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:textAppearance="?android:attr/textAppearanceMedium"
+            android:autoLink="phone"
+            android:textIsSelectable="true"
             android:visibility="gone" />
 
         <!-- Only shown once blocking can run; until then these switches couldn't do anything. -->

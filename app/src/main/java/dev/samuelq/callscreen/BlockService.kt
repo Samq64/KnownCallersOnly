@@ -26,9 +26,12 @@ class BlockService : CallScreeningService() {
         val block = (number.isNullOrBlank() || !isContact(number)) &&
             !(allowRepeats && isRepeatCall(number, now))
         if (block) {
-            prefs.edit()
-                .putInt(KEY_BLOCKED_COUNT, prefs.getInt(KEY_BLOCKED_COUNT, 0) + 1)
+            val count = prefs.getInt(KEY_BLOCKED_COUNT, 0)
+            val edit = prefs.edit()
+            if (count == 0) edit.putLong(KEY_FIRST_BLOCKED, now)
+            edit.putInt(KEY_BLOCKED_COUNT, count + 1)
                 .putLong(KEY_LAST_BLOCKED, now)
+                .putString(KEY_LAST_NUMBER, number.orEmpty()) // empty means hidden
                 .apply()
         }
         respondToCall(

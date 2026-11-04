@@ -26,6 +26,12 @@ class BlockTile : TileService() {
             blocking -> Tile.STATE_ACTIVE
             else -> Tile.STATE_INACTIVE
         }
+        // Say why the tile is unavailable; otherwise null leaves Android's own On/Off label.
+        tile.subtitle = when {
+            !unlocked -> getString(R.string.tile_locked)
+            !ready -> getString(R.string.tile_setup)
+            else -> null
+        }
         tile.icon = Icon.createWithResource(this, if (blocking) R.drawable.ic_tile else R.drawable.ic_tile_off)
         tile.updateTile()
     }

@@ -14,6 +14,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.telephony.PhoneNumberUtils
+import android.telephony.TelephonyManager
 import android.text.format.DateUtils
 import android.view.View
 import android.view.Window
@@ -25,13 +27,16 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import java.text.DateFormat
+import java.util.Locale
 
 const val PREFS = "prefs"
 const val KEY_ENABLED = "enabled"
 const val KEY_INSTANT_DECLINE = "instant_decline"
 const val KEY_REPEAT_CALLERS = "repeat_callers"
 const val KEY_BLOCKED_COUNT = "blocked_count"
+const val KEY_FIRST_BLOCKED = "first_blocked"
 const val KEY_LAST_BLOCKED = "last_blocked"
+const val KEY_LAST_NUMBER = "last_number"
 const val PREFS_RECENT = "recent_blocked"
 
 private const val REQ_ROLE = 1
@@ -164,7 +169,17 @@ class MainActivity : Activity() {
             // Just the time if it was today, otherwise the date.
             val last = DateUtils.formatSameDayTime(
                 prefs.getLong(KEY_LAST_BLOCKED, 0), System.currentTimeMillis(), DateFormat.MEDIUM, DateFormat.SHORT)
-            blockedCount.text = resources.getQuantityString(R.plurals.blocked_count, count, count, last)
+            // Missing for calls blocked before the number was saved.
+            val number = prefs.getString(KEY_LAST_NUMBER, null)
+            val lastLine = when {
+                number == null -> getString(R.string.last_blocked, last)
+                number.isEmpty() -> getString(R.string.last_blocked_number, getString(R.string.hidden_number), last)
+                else -> getString(R.string.last_blocked_number, formatNumber(number), last)
+            }
+            // Counts from before the start was saved fall back to the install date.
+            val first = prefs.getLong(KEY_FIRST_BLOCKED, packageManager.getPackageInfo(packageName, 0).firstInstallTime)
+            val since = DateUtils.formatDateTime(this, first, DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_ABBREV_MONTH)
+            blockedCount.text = resources.getQuantityString(R.plurals.blocked_count, count, count, since) + "\n" + lastLine
         }
 
         options.showIf(ready)
@@ -182,6 +197,13 @@ class MainActivity : Activity() {
             view.isEnabled = enabled
             view.jumpDrawablesToCurrentState()
         }
+    }
+
+    // Formats for the SIM's country, falling back to the number as received.
+    private fun formatNumber(number: String): String {
+        val country = getSystemService(TelephonyManager::class.java)?.simCountryIso
+            ?.takeIf { it.isNotEmpty() } ?: Locale.getDefault().country
+        return PhoneNumberUtils.formatNumber(number, country.uppercase()) ?: number
     }
 
     private fun View.showIf(show: Boolean) {

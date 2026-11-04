@@ -1,8 +1,8 @@
 # Known Callers Only
 
 A tiny Android app that only lets calls from the contacts list ring through. By default everyone
-else is silently blocked unless they call again within 15 minutes. Voicemail and call logs are
-unaffected.
+else is silently blocked unless they call again within 15 minutes. Voicemail is unaffected.
+Blocked calls are still recorded in the call log, but some phone apps don't show them.
 
 ## How it works
 
