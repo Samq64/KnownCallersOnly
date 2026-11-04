@@ -1,19 +1,31 @@
 # Known Callers Only
 
-A tiny Android app that only lets calls from your contacts list ring through. Anyone not in your
-contacts, including hidden numbers, is silently declined. Voicemail and call logs are unaffected.
-
-- Under 100 KB with no third-party libraries
-- No internet permission: contacts are only checked on the device
-- Android 10+ (API 29)
+A tiny Android app that only lets calls from the contacts list ring through. By default everyone
+else is silently blocked unless they call again within 15 minutes. Voicemail and call logs are
+unaffected.
 
 ## How it works
 
-The app registers as Android's call screening app (`CallScreeningService`). For each incoming call
-it looks the number up in the device's contacts, including work-profile contacts where allowed, and
-declines it if there's no match. A toggle in the app, or its Quick Settings tile, pauses blocking
-without undoing the setup. Only one call screening app can be active at a time, so this app replaces
-any other (e.g. Truecaller).
+The app registers as Android's call screening app (`CallScreeningService`), which other apps
+can use from Android 10 onwards. For each incoming call it looks the number up in the device's
+contacts (including work-profile contacts where allowed) and blocks it if there's no match. A
+toggle in the app, or its Quick Settings tile, pauses blocking. Only one call screening app can
+be active at a time, so this app replaces any other (e.g. Truecaller).
+
+## Options
+
+Both are on by default.
+
+### Decline instantly
+
+Blocked callers go straight to voicemail, or hear a busy tone or "unavailable" message, depending
+on the carrier. When off, they hear ringing until the call times out.
+
+### Allow repeat callers
+
+If the same number calls again within 15 minutes, the second call rings. The app remembers blocked
+numbers until the next incoming call after their 15 minutes are up, and forgets them straight away
+when this option or blocking is turned off. Hidden numbers never count as repeats.
 
 ## Limitations
 

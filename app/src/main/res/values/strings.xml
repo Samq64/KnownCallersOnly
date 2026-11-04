@@ -11,8 +11,8 @@
     <string name="add_tile">Add to Quick Settings</string>
     <string name="tile_already_added">Already in Quick Settings</string>
     <plurals name="blocked_count">
-        <item quantity="one">%1$d call blocked · last %2$s</item>
-        <item quantity="other">%1$d calls blocked · last %2$s</item>
+        <item quantity="one">%1$d call blocked · %2$s</item>
+        <item quantity="other">%1$d calls blocked · last: %2$s</item>
     </plurals>
     <string name="permissions">Permissions</string>
     <string name="perm_contacts">Contacts access</string>

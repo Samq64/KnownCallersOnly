@@ -1,7 +1,6 @@
 package dev.samuelq.callscreen
 
 import android.Manifest
-import android.annotation.TargetApi
 import android.app.Activity
 import android.app.StatusBarManager
 import android.app.role.RoleManager
@@ -24,6 +23,7 @@ import android.widget.CompoundButton
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import java.text.DateFormat
 
 const val PREFS = "prefs"
@@ -32,10 +32,19 @@ const val KEY_INSTANT_DECLINE = "instant_decline"
 const val KEY_REPEAT_CALLERS = "repeat_callers"
 const val KEY_BLOCKED_COUNT = "blocked_count"
 const val KEY_LAST_BLOCKED = "last_blocked"
+const val PREFS_RECENT = "recent_blocked"
 
 private const val REQ_ROLE = 1
 
-// Blocking can only run with both of these; shared by the app and the Quick Settings tile.
+// Shared by the app and the Quick Settings tile. Turning off blocking
+// or repeat callers forgets all recently blocked numbers.
+fun Context.saveSwitch(key: String, on: Boolean) {
+    getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(key, on).apply()
+    if (!on && (key == KEY_ENABLED || key == KEY_REPEAT_CALLERS)) {
+        getSharedPreferences(PREFS_RECENT, Context.MODE_PRIVATE).edit().clear().apply()
+    }
+}
+
 fun Context.hasContacts() =
     checkSelfPermission(Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
 fun Context.hasRole() =
@@ -53,7 +62,7 @@ class MainActivity : Activity() {
     private val roles by lazy { getSystemService(RoleManager::class.java) }
     private val prefs by lazy { getSharedPreferences(PREFS, MODE_PRIVATE) }
     private fun saver(key: String) = CompoundButton.OnCheckedChangeListener { _, on ->
-        prefs.edit().putBoolean(key, on).apply()
+        saveSwitch(key, on)
     }
     // The tile and BlockService can change prefs while this screen is visible (opening the shade
     // doesn't always pause the activity). Kept in a field because prefs only holds listeners weakly.
@@ -61,12 +70,10 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requestWindowFeature(Window.FEATURE_NO_TITLE) // the layout has its own title
+        requestWindowFeature(Window.FEATURE_NO_TITLE)
         setContentView(R.layout.activity_main)
 
-        // Edge-to-edge (enforced on API 35): pad for system bars AND the display cutout,
-        // so content clears the camera hole-punch in landscape. Below API 35 the system
-        // already keeps content out of these areas, so the insets are zero there.
+        // Edge-to-edge enforced on API 35
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             findViewById<View>(R.id.root).setOnApplyWindowInsetsListener { v, insets ->
                 val i = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
@@ -84,8 +91,6 @@ class MainActivity : Activity() {
         rowContacts = findViewById(R.id.row_contacts)
         rowRole = findViewById(R.id.row_role)
 
-        // Launch is the only time we ask directly: Android silently refuses repeat requests after
-        // the user declines, so the buttons go to the settings pages where it can always be changed.
         findViewById<Button>(R.id.open_app_info).setOnClickListener {
             startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null)))
         }
@@ -100,9 +105,8 @@ class MainActivity : Activity() {
         }
         prefs.registerOnSharedPreferenceChangeListener(prefsChanged)
 
-        // Ask for whatever is missing straight away, one dialog after the other. Skipped when
-        // the activity is only being recreated (e.g. rotation) so it doesn't ask again mid-setup.
-        // Android stops showing both dialogs after the user declines them, so this can't nag.
+        // Ask for whatever is missing straight away, one dialog after the other.
+        // Skipped when the activity is only being recreated (e.g. rotation)
         if (savedInstanceState == null) {
             if (!hasRole()) startActivityForResult(roles.createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING), REQ_ROLE)
             else if (!hasContacts()) requestContacts()
@@ -122,9 +126,8 @@ class MainActivity : Activity() {
         super.onDestroy()
     }
 
-    // Android 13+ can offer to add the tile directly; otherwise users rarely discover it exists.
-    // When it's already added the system shows nothing, so say so instead of seeming to ignore the tap.
-    @TargetApi(Build.VERSION_CODES.TIRAMISU)
+    // Android 13+ can offer to add the tile directly.
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun requestAddTile() {
         getSystemService(StatusBarManager::class.java).requestAddTileService(
             ComponentName(this, BlockTile::class.java),
@@ -164,7 +167,6 @@ class MainActivity : Activity() {
             blockedCount.text = resources.getQuantityString(R.plurals.blocked_count, count, count, last)
         }
 
-        // Options can't do anything until blocking can run, so Permissions takes their place.
         options.showIf(ready)
         permissions.showIf(!ready)
         rowContacts.showIf(!hasContacts)

@@ -16,7 +16,7 @@ android {
     }
     buildTypes {
         release {
-            isMinifyEnabled = true   // R8: strips unused Kotlin stdlib code
+            isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
         }
@@ -32,4 +32,8 @@ android {
 
 kotlin {
     compilerOptions { jvmTarget.set(JvmTarget.JVM_17) }
+}
+
+dependencies {
+    compileOnly("androidx.annotation:annotation:1.11.0")
 }
