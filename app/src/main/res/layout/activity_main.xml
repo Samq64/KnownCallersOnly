@@ -35,15 +35,61 @@
             android:textColor="?android:attr/textColorSecondary" />
 
         <!-- Hidden until something has been blocked. -->
-        <TextView
-            android:id="@+id/blocked_count"
+        <LinearLayout
+            android:id="@+id/stats"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:autoLink="phone"
-            android:textIsSelectable="true"
-            android:visibility="gone" />
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/blocked_calls"
+                android:textAllCaps="true"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TableLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:stretchColumns="1"
+                android:shrinkColumns="1">
+
+                <TableRow android:paddingVertical="4dp">
+
+                    <TextView
+                        android:text="@string/stats_total"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:textSize="15sp" />
+
+                    <TextView
+                        android:id="@+id/stats_total"
+                        android:gravity="end"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:textSize="15sp" />
+                </TableRow>
+
+                <TableRow android:paddingVertical="4dp">
+
+                    <TextView
+                        android:text="@string/stats_recent"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:textSize="15sp" />
+
+                    <TextView
+                        android:id="@+id/stats_recent"
+                        android:autoLink="phone"
+                        android:gravity="end"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:textIsSelectable="true"
+                        android:textSize="15sp" />
+                </TableRow>
+            </TableLayout>
+        </LinearLayout>
 
         <!-- Only shown once blocking can run; until then these switches couldn't do anything. -->
         <LinearLayout
@@ -123,8 +169,6 @@
                 android:textSize="13sp"
                 android:textStyle="bold" />
 
-            <!-- A table so the buttons share one column, sized to the widest of them.
-                 Column 0 (labels) takes the spare width and wraps if space runs out. -->
             <TableLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -161,7 +205,6 @@
             </TableLayout>
         </LinearLayout>
 
-        <!-- Footnote: divider, then the tip. -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"

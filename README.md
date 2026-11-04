@@ -30,8 +30,9 @@ when this option or blocking is turned off. Hidden numbers never count as repeat
 ## Limitations
 
 - An outgoing call does not unblock that number.
-- Only regular phone calls are screened. Calls through apps like WhatsApp or Signal are unaffected.
-- Until the phone is unlocked for the first time after a reboot, calls are not screened.
+- Only regular phone calls are blocked. Calls through apps like WhatsApp or Signal are unaffected.
+- Until the phone is unlocked for the first time after a reboot, calls are not blocked.
+- Although Android logs blocked calls, not all phone apps display them.
 
 ## Building
 

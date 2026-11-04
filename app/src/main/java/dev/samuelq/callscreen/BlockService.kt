@@ -31,7 +31,7 @@ class BlockService : CallScreeningService() {
             if (count == 0) edit.putLong(KEY_FIRST_BLOCKED, now)
             edit.putInt(KEY_BLOCKED_COUNT, count + 1)
                 .putLong(KEY_LAST_BLOCKED, now)
-                .putString(KEY_LAST_NUMBER, number.orEmpty()) // empty means hidden
+                .putString(KEY_LAST_NUMBER, number?.ifBlank { null }) // null (removed) if hidden
                 .apply()
         }
         respondToCall(

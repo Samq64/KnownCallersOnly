@@ -12,13 +12,10 @@
     <string name="tile_already_added">Already in Quick Settings</string>
     <string name="tile_locked">Unlock to use</string>
     <string name="tile_setup">Setup needed</string>
-    <plurals name="blocked_count">
-        <item quantity="one">%1$d call blocked since %2$s</item>
-        <item quantity="other">%1$d calls blocked since %2$s</item>
-    </plurals>
-    <string name="last_blocked">Most recent: %1$s</string>
-    <string name="last_blocked_number">Most recent: %1$s · %2$s</string>
-    <string name="hidden_number">Hidden number</string>
+    <string name="blocked_calls">Blocked calls</string>
+    <string name="stats_total">Total</string>
+    <string name="stats_total_value">%1$d since %2$s</string>
+    <string name="stats_recent">Most recent</string>
     <string name="permissions">Permissions</string>
     <string name="perm_contacts">Contacts access</string>
     <string name="perm_role">Caller ID &amp; spam app</string>

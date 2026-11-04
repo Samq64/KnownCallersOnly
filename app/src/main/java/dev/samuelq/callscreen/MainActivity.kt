@@ -59,7 +59,9 @@ class MainActivity : Activity() {
     private lateinit var toggle: Switch
     private lateinit var instantDecline: Switch
     private lateinit var repeatCallers: Switch
-    private lateinit var blockedCount: TextView
+    private lateinit var stats: View
+    private lateinit var statsTotal: TextView
+    private lateinit var statsRecent: TextView
     private lateinit var options: View
     private lateinit var permissions: View
     private lateinit var rowContacts: View
@@ -90,7 +92,9 @@ class MainActivity : Activity() {
         toggle = findViewById(R.id.toggle)
         instantDecline = findViewById(R.id.instant_decline)
         repeatCallers = findViewById(R.id.repeat_callers)
-        blockedCount = findViewById(R.id.blocked_count)
+        stats = findViewById(R.id.stats)
+        statsTotal = findViewById(R.id.stats_total)
+        statsRecent = findViewById(R.id.stats_recent)
         options = findViewById(R.id.options)
         permissions = findViewById(R.id.permissions)
         rowContacts = findViewById(R.id.row_contacts)
@@ -164,22 +168,19 @@ class MainActivity : Activity() {
 
         // Counted by BlockService; this screen updates live through prefsChanged.
         val count = prefs.getInt(KEY_BLOCKED_COUNT, 0)
-        blockedCount.showIf(count > 0)
+        stats.showIf(count > 0)
         if (count > 0) {
+            val since = DateUtils.formatDateTime(
+                this, prefs.getLong(KEY_FIRST_BLOCKED, 0), DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_ABBREV_MONTH)
+            statsTotal.text = getString(R.string.stats_total_value, count, since)
+
             // Just the time if it was today, otherwise the date.
             val last = DateUtils.formatSameDayTime(
                 prefs.getLong(KEY_LAST_BLOCKED, 0), System.currentTimeMillis(), DateFormat.MEDIUM, DateFormat.SHORT)
-            // Missing for calls blocked before the number was saved.
-            val number = prefs.getString(KEY_LAST_NUMBER, null)
-            val lastLine = when {
-                number == null -> getString(R.string.last_blocked, last)
-                number.isEmpty() -> getString(R.string.last_blocked_number, getString(R.string.hidden_number), last)
-                else -> getString(R.string.last_blocked_number, formatNumber(number), last)
-            }
-            // Counts from before the start was saved fall back to the install date.
-            val first = prefs.getLong(KEY_FIRST_BLOCKED, packageManager.getPackageInfo(packageName, 0).firstInstallTime)
-            val since = DateUtils.formatDateTime(this, first, DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_ABBREV_MONTH)
-            blockedCount.text = resources.getQuantityString(R.plurals.blocked_count, count, count, since) + "\n" + lastLine
+            // Number (if not hidden) then time, each kept whole so the line only wraps between them.
+            // The em space also stops autoLink reading the time's digits as part of the number.
+            val number = prefs.getString(KEY_LAST_NUMBER, null)?.let(::formatNumber)
+            statsRecent.text = listOfNotNull(number, last.toString()).joinToString("\u2003") { it.noBreak() }
         }
 
         options.showIf(ready)
@@ -205,6 +206,9 @@ class MainActivity : Activity() {
             ?.takeIf { it.isNotEmpty() } ?: Locale.getDefault().country
         return PhoneNumberUtils.formatNumber(number, country.uppercase()) ?: number
     }
+
+    // Non-breaking spaces and hyphens, so text wraps as one piece.
+    private fun String.noBreak() = replace(' ', '\u00A0').replace('-', '\u2011')
 
     private fun View.showIf(show: Boolean) {
         visibility = if (show) View.VISIBLE else View.GONE
