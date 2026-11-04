@@ -1,6 +1,7 @@
 <resources>
-    <string name="app_name">Known Callers</string>
-    <string name="toggle">Allow known callers only</string>
+    <string name="app_name">Known Callers Only</string>
+    <string name="launcher_label">Known Only</string>
+    <string name="toggle">Enable</string>
     <string name="description">Anyone outside of this device\'s contacts list is silently declined. Voicemail, call logs and apps such as WhatsApp are unaffected.</string>
     <string name="permissions">Permissions</string>
     <string name="perm_contacts">Contacts access</string>

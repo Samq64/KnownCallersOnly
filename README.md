@@ -1,4 +1,4 @@
-# Known Callers
+# Known Callers Only
 
 A tiny Android app that only lets calls from your contacts list ring through. Anyone not in your
 contacts, including hidden numbers, is silently declined. Voicemail and call logs are unaffected.
