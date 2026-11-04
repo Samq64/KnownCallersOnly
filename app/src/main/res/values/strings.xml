@@ -3,6 +3,7 @@
     <string name="launcher_label">Known Only</string>
     <string name="toggle">Enable</string>
     <string name="description">Anyone outside of this device\'s contacts list is silently declined. Voicemail, call logs and apps such as WhatsApp are unaffected.</string>
+    <string name="add_tile">Add to Quick Settings</string>
     <string name="permissions">Permissions</string>
     <string name="perm_contacts">Contacts access</string>
     <string name="perm_role">Call screening</string>

@@ -34,6 +34,15 @@
             android:text="@string/description"
             android:textColor="?android:attr/textColorSecondary" />
 
+        <!-- Shown once setup is complete and hidden after the tile is added (Android 13+) -->
+        <Button
+            android:id="@+id/add_tile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/add_tile"
+            android:visibility="gone" />
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

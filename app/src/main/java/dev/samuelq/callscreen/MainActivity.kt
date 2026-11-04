@@ -1,10 +1,16 @@
 package dev.samuelq.callscreen
 
 import android.Manifest
+import android.annotation.TargetApi
 import android.app.Activity
+import android.app.StatusBarManager
 import android.app.role.RoleManager
+import android.content.ComponentName
+import android.content.Context
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
+import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Bundle
 import android.util.TypedValue
@@ -18,6 +24,13 @@ import android.widget.TextView
 
 const val PREFS = "prefs"
 const val KEY_ENABLED = "enabled"
+const val KEY_TILE_ADDED = "tile_added"
+
+// Blocking can only run with both of these; shared by the app and the Quick Settings tile.
+fun Context.hasContacts() =
+    checkSelfPermission(Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
+fun Context.hasRole() =
+    getSystemService(RoleManager::class.java).isRoleHeld(RoleManager.ROLE_CALL_SCREENING)
 
 class MainActivity : Activity() {
     private lateinit var toggle: Switch
@@ -25,11 +38,15 @@ class MainActivity : Activity() {
     private lateinit var statusRole: TextView
     private lateinit var contactsBtn: Button
     private lateinit var roleBtn: Button
+    private lateinit var addTileBtn: Button
     private val roles by lazy { getSystemService(RoleManager::class.java) }
     private val prefs by lazy { getSharedPreferences(PREFS, MODE_PRIVATE) }
     private val saveToggle = CompoundButton.OnCheckedChangeListener { _, on ->
         prefs.edit().putBoolean(KEY_ENABLED, on).apply()
     }
+    // The tile can change prefs while this screen is visible (opening the shade doesn't always
+    // pause the activity). Kept in a field because prefs only holds listeners weakly.
+    private val prefsChanged = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> refresh() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,11 +69,32 @@ class MainActivity : Activity() {
         statusRole = findViewById(R.id.status_role)
         contactsBtn = findViewById(R.id.grant_contacts)
         roleBtn = findViewById(R.id.grant_role)
+        addTileBtn = findViewById(R.id.add_tile)
 
         contactsBtn.setOnClickListener { requestPermissions(arrayOf(Manifest.permission.READ_CONTACTS), 0) }
         roleBtn.setOnClickListener {
             startActivityForResult(roles.createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING), 1)
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            addTileBtn.setOnClickListener { requestAddTile() }
+        }
+        prefs.registerOnSharedPreferenceChangeListener(prefsChanged)
+    }
+
+    override fun onDestroy() {
+        prefs.unregisterOnSharedPreferenceChangeListener(prefsChanged)
+        super.onDestroy()
+    }
+
+    // Android 13+ can offer to add the tile directly instead of making users edit Quick Settings.
+    @TargetApi(Build.VERSION_CODES.TIRAMISU)
+    private fun requestAddTile() {
+        getSystemService(StatusBarManager::class.java).requestAddTileService(
+            ComponentName(this, BlockTile::class.java),
+            getString(R.string.app_name),
+            Icon.createWithResource(this, R.drawable.ic_tile),
+            mainExecutor,
+        ) {} // BlockTile records KEY_TILE_ADDED itself, which refreshes this screen
     }
 
     override fun onResume() {
@@ -65,8 +103,8 @@ class MainActivity : Activity() {
     }
 
     private fun refresh() {
-        val hasContacts = checkSelfPermission(Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
-        val hasRole = roles.isRoleHeld(RoleManager.ROLE_CALL_SCREENING)
+        val hasContacts = hasContacts()
+        val hasRole = hasRole()
         val ready = hasContacts && hasRole
 
         // Show off whenever blocking cannot actually run, without overwriting the saved choice:
@@ -79,6 +117,9 @@ class MainActivity : Activity() {
         showStatus(statusRole, hasRole, R.string.perm_role)
         contactsBtn.visibility = if (hasContacts) View.GONE else View.VISIBLE
         roleBtn.visibility = if (hasRole) View.GONE else View.VISIBLE
+        val canAddTile = ready && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            !prefs.getBoolean(KEY_TILE_ADDED, false)
+        addTileBtn.visibility = if (canAddTile) View.VISIBLE else View.GONE
     }
 
     // Icon + tint show the state visually; contentDescription makes TalkBack say it.

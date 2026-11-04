@@ -11,8 +11,9 @@ contacts, including hidden numbers, is silently declined. Voicemail and call log
 
 The app registers as Android's call screening app (`CallScreeningService`). For each incoming call
 it looks the number up in the device's contacts, including work-profile contacts where allowed, and
-declines it if there's no match. A toggle in the app pauses blocking without undoing the setup. Only
-one call screening app can be active at a time, so this app replaces any other (e.g. Truecaller).
+declines it if there's no match. A toggle in the app, or its Quick Settings tile, pauses blocking
+without undoing the setup. Only one call screening app can be active at a time, so this app replaces
+any other (e.g. Truecaller).
 
 ## Limitations
 
