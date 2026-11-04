@@ -176,9 +176,12 @@ class MainActivity : Activity() {
     // Detach the listener while setting state so only real taps are persisted.
     private fun bind(view: Switch, key: String, checked: Boolean, enabled: Boolean) {
         view.setOnCheckedChangeListener(null)
-        view.isChecked = checked
+        if (view.isChecked != checked) view.isChecked = checked
         view.setOnCheckedChangeListener(saver(key))
-        view.isEnabled = enabled
+        if (view.isEnabled != enabled) {
+            view.isEnabled = enabled
+            view.jumpDrawablesToCurrentState()
+        }
     }
 
     private fun View.showIf(show: Boolean) {
