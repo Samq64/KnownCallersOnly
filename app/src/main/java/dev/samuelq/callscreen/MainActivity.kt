@@ -7,13 +7,15 @@ import android.app.StatusBarManager
 import android.app.role.RoleManager
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
-import android.content.res.ColorStateList
 import android.graphics.drawable.Icon
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.util.TypedValue
+import android.provider.Settings
+import android.text.format.DateUtils
 import android.view.View
 import android.view.Window
 import android.view.WindowInsets
@@ -21,10 +23,17 @@ import android.widget.Button
 import android.widget.CompoundButton
 import android.widget.Switch
 import android.widget.TextView
+import android.widget.Toast
+import java.text.DateFormat
 
 const val PREFS = "prefs"
 const val KEY_ENABLED = "enabled"
-const val KEY_TILE_ADDED = "tile_added"
+const val KEY_INSTANT_DECLINE = "instant_decline"
+const val KEY_REPEAT_CALLERS = "repeat_callers"
+const val KEY_BLOCKED_COUNT = "blocked_count"
+const val KEY_LAST_BLOCKED = "last_blocked"
+
+private const val REQ_ROLE = 1
 
 // Blocking can only run with both of these; shared by the app and the Quick Settings tile.
 fun Context.hasContacts() =
@@ -34,18 +43,20 @@ fun Context.hasRole() =
 
 class MainActivity : Activity() {
     private lateinit var toggle: Switch
-    private lateinit var statusContacts: TextView
-    private lateinit var statusRole: TextView
-    private lateinit var contactsBtn: Button
-    private lateinit var roleBtn: Button
-    private lateinit var addTileBtn: Button
+    private lateinit var instantDecline: Switch
+    private lateinit var repeatCallers: Switch
+    private lateinit var blockedCount: TextView
+    private lateinit var options: View
+    private lateinit var permissions: View
+    private lateinit var rowContacts: View
+    private lateinit var rowRole: View
     private val roles by lazy { getSystemService(RoleManager::class.java) }
     private val prefs by lazy { getSharedPreferences(PREFS, MODE_PRIVATE) }
-    private val saveToggle = CompoundButton.OnCheckedChangeListener { _, on ->
-        prefs.edit().putBoolean(KEY_ENABLED, on).apply()
+    private fun saver(key: String) = CompoundButton.OnCheckedChangeListener { _, on ->
+        prefs.edit().putBoolean(key, on).apply()
     }
-    // The tile can change prefs while this screen is visible (opening the shade doesn't always
-    // pause the activity). Kept in a field because prefs only holds listeners weakly.
+    // The tile and BlockService can change prefs while this screen is visible (opening the shade
+    // doesn't always pause the activity). Kept in a field because prefs only holds listeners weakly.
     private val prefsChanged = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> refresh() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,20 +76,45 @@ class MainActivity : Activity() {
         }
 
         toggle = findViewById(R.id.toggle)
-        statusContacts = findViewById(R.id.status_contacts)
-        statusRole = findViewById(R.id.status_role)
-        contactsBtn = findViewById(R.id.grant_contacts)
-        roleBtn = findViewById(R.id.grant_role)
-        addTileBtn = findViewById(R.id.add_tile)
+        instantDecline = findViewById(R.id.instant_decline)
+        repeatCallers = findViewById(R.id.repeat_callers)
+        blockedCount = findViewById(R.id.blocked_count)
+        options = findViewById(R.id.options)
+        permissions = findViewById(R.id.permissions)
+        rowContacts = findViewById(R.id.row_contacts)
+        rowRole = findViewById(R.id.row_role)
 
-        contactsBtn.setOnClickListener { requestPermissions(arrayOf(Manifest.permission.READ_CONTACTS), 0) }
-        roleBtn.setOnClickListener {
-            startActivityForResult(roles.createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING), 1)
+        // Launch is the only time we ask directly: Android silently refuses repeat requests after
+        // the user declines, so the buttons go to the settings pages where it can always be changed.
+        findViewById<Button>(R.id.open_app_info).setOnClickListener {
+            startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null)))
+        }
+        findViewById<Button>(R.id.open_default_apps).setOnClickListener {
+            startActivity(Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS))
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            addTileBtn.setOnClickListener { requestAddTile() }
+            findViewById<Button>(R.id.add_tile).apply {
+                visibility = View.VISIBLE
+                setOnClickListener { requestAddTile() }
+            }
         }
         prefs.registerOnSharedPreferenceChangeListener(prefsChanged)
+
+        // Ask for whatever is missing straight away, one dialog after the other. Skipped when
+        // the activity is only being recreated (e.g. rotation) so it doesn't ask again mid-setup.
+        // Android stops showing both dialogs after the user declines them, so this can't nag.
+        if (savedInstanceState == null) {
+            if (!hasRole()) startActivityForResult(roles.createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING), REQ_ROLE)
+            else if (!hasContacts()) requestContacts()
+        }
+    }
+
+    private fun requestContacts() = requestPermissions(arrayOf(Manifest.permission.READ_CONTACTS), 0)
+
+    // Whatever the user chose for the role, move on to the contacts prompt.
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQ_ROLE && !hasContacts()) requestContacts()
     }
 
     override fun onDestroy() {
@@ -86,7 +122,8 @@ class MainActivity : Activity() {
         super.onDestroy()
     }
 
-    // Android 13+ can offer to add the tile directly instead of making users edit Quick Settings.
+    // Android 13+ can offer to add the tile directly; otherwise users rarely discover it exists.
+    // When it's already added the system shows nothing, so say so instead of seeming to ignore the tap.
     @TargetApi(Build.VERSION_CODES.TIRAMISU)
     private fun requestAddTile() {
         getSystemService(StatusBarManager::class.java).requestAddTileService(
@@ -94,7 +131,11 @@ class MainActivity : Activity() {
             getString(R.string.app_name),
             Icon.createWithResource(this, R.drawable.ic_tile),
             mainExecutor,
-        ) {} // BlockTile records KEY_TILE_ADDED itself, which refreshes this screen
+        ) { result ->
+            if (result == StatusBarManager.TILE_ADD_REQUEST_RESULT_TILE_ALREADY_ADDED) {
+                Toast.makeText(this, R.string.tile_already_added, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     override fun onResume() {
@@ -107,35 +148,38 @@ class MainActivity : Activity() {
         val hasRole = hasRole()
         val ready = hasContacts && hasRole
 
-        // Show off whenever blocking cannot actually run, without overwriting the saved choice:
-        // detach the listener so only real taps are persisted.
-        toggle.setOnCheckedChangeListener(null)
-        toggle.isChecked = ready && prefs.getBoolean(KEY_ENABLED, true)
-        toggle.setOnCheckedChangeListener(saveToggle)
-        toggle.isEnabled = ready
-        showStatus(statusContacts, hasContacts, R.string.perm_contacts)
-        showStatus(statusRole, hasRole, R.string.perm_role)
-        contactsBtn.visibility = if (hasContacts) View.GONE else View.VISIBLE
-        roleBtn.visibility = if (hasRole) View.GONE else View.VISIBLE
-        val canAddTile = ready && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            !prefs.getBoolean(KEY_TILE_ADDED, false)
-        addTileBtn.visibility = if (canAddTile) View.VISIBLE else View.GONE
+        // Show off whenever blocking cannot actually run, without overwriting the saved choice.
+        val enabled = ready && prefs.getBoolean(KEY_ENABLED, true)
+        bind(toggle, KEY_ENABLED, enabled, ready)
+        bind(instantDecline, KEY_INSTANT_DECLINE, prefs.getBoolean(KEY_INSTANT_DECLINE, true), enabled)
+        bind(repeatCallers, KEY_REPEAT_CALLERS, prefs.getBoolean(KEY_REPEAT_CALLERS, true), enabled)
+
+        // Counted by BlockService; this screen updates live through prefsChanged.
+        val count = prefs.getInt(KEY_BLOCKED_COUNT, 0)
+        blockedCount.showIf(count > 0)
+        if (count > 0) {
+            // Just the time if it was today, otherwise the date.
+            val last = DateUtils.formatSameDayTime(
+                prefs.getLong(KEY_LAST_BLOCKED, 0), System.currentTimeMillis(), DateFormat.MEDIUM, DateFormat.SHORT)
+            blockedCount.text = resources.getQuantityString(R.plurals.blocked_count, count, count, last)
+        }
+
+        // Options can't do anything until blocking can run, so Permissions takes their place.
+        options.showIf(ready)
+        permissions.showIf(!ready)
+        rowContacts.showIf(!hasContacts)
+        rowRole.showIf(!hasRole)
     }
 
-    // Icon + tint show the state visually; contentDescription makes TalkBack say it.
-    private fun showStatus(view: TextView, ok: Boolean, label: Int) {
-        val name = getString(label)
-        view.text = name
-        view.contentDescription = getString(if (ok) R.string.status_granted else R.string.status_missing, name)
-        view.setCompoundDrawablesRelativeWithIntrinsicBounds(
-            if (ok) R.drawable.ic_granted else R.drawable.ic_missing, 0, 0, 0)
-        view.compoundDrawableTintList =
-            themeColor(if (ok) android.R.attr.colorAccent else android.R.attr.colorError)
+    // Detach the listener while setting state so only real taps are persisted.
+    private fun bind(view: Switch, key: String, checked: Boolean, enabled: Boolean) {
+        view.setOnCheckedChangeListener(null)
+        view.isChecked = checked
+        view.setOnCheckedChangeListener(saver(key))
+        view.isEnabled = enabled
     }
 
-    private fun themeColor(attr: Int): ColorStateList {
-        val tv = TypedValue()
-        theme.resolveAttribute(attr, tv, true)
-        return if (tv.resourceId != 0) getColorStateList(tv.resourceId) else ColorStateList.valueOf(tv.data)
+    private fun View.showIf(show: Boolean) {
+        visibility = if (show) View.VISIBLE else View.GONE
     }
 }

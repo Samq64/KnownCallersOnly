@@ -2,13 +2,22 @@
     <string name="app_name">Known Callers Only</string>
     <string name="launcher_label">Known Only</string>
     <string name="toggle">Enable</string>
-    <string name="description">Anyone outside of this device\'s contacts list is silently declined. Voicemail, call logs and apps such as WhatsApp are unaffected.</string>
+    <string name="description">Blocks calls from anyone not in this device\'s contacts. Voicemail and apps such as WhatsApp are unaffected.</string>
+    <string name="options">Options</string>
+    <string name="instant_decline">Decline instantly</string>
+    <string name="instant_decline_desc">Callers go straight to voicemail or hear a busy tone or \"unavailable\" message. When off, they hear ringing until it times out.</string>
+    <string name="repeat_callers">Allow repeat callers</string>
+    <string name="repeat_callers_desc">If the same number calls again within 15 minutes, the second call rings.</string>
     <string name="add_tile">Add to Quick Settings</string>
+    <string name="tile_already_added">Already in Quick Settings</string>
+    <plurals name="blocked_count">
+        <item quantity="one">%1$d call blocked · last %2$s</item>
+        <item quantity="other">%1$d calls blocked · last %2$s</item>
+    </plurals>
     <string name="permissions">Permissions</string>
     <string name="perm_contacts">Contacts access</string>
-    <string name="perm_role">Call screening</string>
-    <string name="grant">Grant</string>
-    <string name="status_granted">%1$s: granted</string>
-    <string name="status_missing">%1$s: not granted</string>
-    <string name="builtin_note"><b>Tip:</b> Check if your Phone app already has this setting built in. Options like \"Block unidentified callers\" usually only apply to hidden numbers, not unknown ones.</string>
+    <string name="perm_role">Caller ID &amp; spam app</string>
+    <string name="app_info">App info</string>
+    <string name="default_apps">Default apps</string>
+    <string name="builtin_note"><b>Tip:</b> Your phone app may already have this setting built in. Options like \"Block unidentified callers\" usually only apply to hidden numbers, not unknown ones.</string>
 </resources>

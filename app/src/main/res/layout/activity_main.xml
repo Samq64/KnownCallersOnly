@@ -34,70 +34,129 @@
             android:text="@string/description"
             android:textColor="?android:attr/textColorSecondary" />
 
-        <!-- Shown once setup is complete and hidden after the tile is added (Android 13+) -->
-        <Button
-            android:id="@+id/add_tile"
-            android:layout_width="wrap_content"
+        <!-- Hidden until something has been blocked. -->
+        <TextView
+            android:id="@+id/blocked_count"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:text="@string/add_tile"
+            android:textAppearance="?android:attr/textAppearanceMedium"
             android:visibility="gone" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="@string/permissions"
-            android:textAllCaps="true"
-            android:textColor="?android:attr/textColorSecondary"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-
-        <!-- Each row: status on the left, its grant button on the right.
-             minHeight keeps the row from shrinking when the button is hidden. -->
+        <!-- Only shown once blocking can run; until then these switches couldn't do anything. -->
         <LinearLayout
+            android:id="@+id/options"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="center_vertical"
-            android:minHeight="48dp"
-            android:orientation="horizontal">
+            android:orientation="vertical">
 
             <TextView
-                android:id="@+id/status_contacts"
-                android:drawablePadding="12dp"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
-
-            <Button
-                android:id="@+id/grant_contacts"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/grant" />
+                android:layout_marginTop="32dp"
+                android:text="@string/options"
+                android:textAllCaps="true"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <Switch
+                android:id="@+id/instant_decline"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:minHeight="48dp"
+                android:text="@string/instant_decline"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/instant_decline_desc"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="14sp" />
+
+            <Switch
+                android:id="@+id/repeat_callers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:minHeight="48dp"
+                android:text="@string/repeat_callers"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/repeat_callers_desc"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="14sp" />
+
+            <!-- Android 13+ only. Always shown there: Android can't tell us whether the tile is
+                 already added, and asking again just reports that it is. -->
+            <Button
+                android:id="@+id/add_tile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/add_tile"
+                android:visibility="gone" />
         </LinearLayout>
 
+        <!-- Shown in place of Options while blocking can't run; each row is hidden once granted. -->
         <LinearLayout
+            android:id="@+id/permissions"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:minHeight="48dp"
-            android:orientation="horizontal">
+            android:orientation="vertical">
 
             <TextView
-                android:id="@+id/status_role"
-                android:drawablePadding="12dp"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
-
-            <Button
-                android:id="@+id/grant_role"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/grant" />
+                android:layout_marginTop="32dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/permissions"
+                android:textAllCaps="true"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <!-- A table so the buttons share one column, sized to the widest of them.
+                 Column 0 (labels) takes the spare width and wraps if space runs out. -->
+            <TableLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:shrinkColumns="0"
+                android:stretchColumns="0">
+
+                <TableRow
+                    android:id="@+id/row_contacts"
+                    android:gravity="center_vertical"
+                    android:minHeight="48dp">
+
+                    <TextView
+                        android:text="@string/perm_contacts"
+                        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+                    <Button
+                        android:id="@+id/open_app_info"
+                        android:text="@string/app_info" />
+                </TableRow>
+
+                <TableRow
+                    android:id="@+id/row_role"
+                    android:gravity="center_vertical"
+                    android:minHeight="48dp">
+
+                    <TextView
+                        android:text="@string/perm_role"
+                        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+                    <Button
+                        android:id="@+id/open_default_apps"
+                        android:text="@string/default_apps" />
+                </TableRow>
+            </TableLayout>
         </LinearLayout>
 
         <!-- Footnote: divider, then the tip. -->
