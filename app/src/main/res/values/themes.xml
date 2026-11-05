@@ -1,6 +1,23 @@
 <resources>
     <style name="AppTheme" parent="@android:style/Theme.DeviceDefault.DayNight">
-        <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowLightStatusBar">?android:attr/isLightTheme</item>
+        <item name="android:windowLightNavigationBar">?android:attr/isLightTheme</item>
+        <item name="android:actionBarStyle">@style/HeaderBar</item>
+    </style>
+
+    <!-- Android shrinks the title from 20 to 14 in landscape; keep the portrait size. -->
+    <style name="HeaderBar" parent="@android:style/Widget.DeviceDefault.ActionBar.Solid">
+        <item name="android:titleTextStyle">@style/HeaderBarTitle</item>
+    </style>
+
+    <style name="HeaderBarTitle" parent="@android:style/TextAppearance.DeviceDefault.Widget.ActionBar.Title">
+        <item name="android:textSize">20dp</item>
+    </style>
+
+    <style name="SettingSwitch">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceMedium</item>
     </style>
 </resources>

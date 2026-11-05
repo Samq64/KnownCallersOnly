@@ -18,10 +18,8 @@ import android.telephony.PhoneNumberUtils
 import android.telephony.TelephonyManager
 import android.text.format.DateUtils
 import android.view.View
-import android.view.Window
 import android.view.WindowInsets
 import android.widget.Button
-import android.widget.CompoundButton
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
@@ -59,25 +57,19 @@ class MainActivity : Activity() {
     private lateinit var toggle: Switch
     private lateinit var instantDecline: Switch
     private lateinit var repeatCallers: Switch
-    private lateinit var stats: View
     private lateinit var statsTotal: TextView
     private lateinit var statsRecent: TextView
     private lateinit var options: View
     private lateinit var permissions: View
     private lateinit var rowContacts: View
     private lateinit var rowRole: View
-    private val roles by lazy { getSystemService(RoleManager::class.java) }
     private val prefs by lazy { getSharedPreferences(PREFS, MODE_PRIVATE) }
-    private fun saver(key: String) = CompoundButton.OnCheckedChangeListener { _, on ->
-        saveSwitch(key, on)
-    }
     // The tile and BlockService can change prefs while this screen is visible (opening the shade
     // doesn't always pause the activity). Kept in a field because prefs only holds listeners weakly.
     private val prefsChanged = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> refresh() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requestWindowFeature(Window.FEATURE_NO_TITLE)
         setContentView(R.layout.activity_main)
 
         // Edge-to-edge enforced on API 35
@@ -92,7 +84,6 @@ class MainActivity : Activity() {
         toggle = findViewById(R.id.toggle)
         instantDecline = findViewById(R.id.instant_decline)
         repeatCallers = findViewById(R.id.repeat_callers)
-        stats = findViewById(R.id.stats)
         statsTotal = findViewById(R.id.stats_total)
         statsRecent = findViewById(R.id.stats_recent)
         options = findViewById(R.id.options)
@@ -117,8 +108,10 @@ class MainActivity : Activity() {
         // Ask for whatever is missing straight away, one dialog after the other.
         // Skipped when the activity is only being recreated (e.g. rotation)
         if (savedInstanceState == null) {
-            if (!hasRole()) startActivityForResult(roles.createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING), REQ_ROLE)
-            else if (!hasContacts()) requestContacts()
+            if (!hasRole()) {
+                val intent = getSystemService(RoleManager::class.java).createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING)
+                startActivityForResult(intent, REQ_ROLE)
+            } else if (!hasContacts()) requestContacts()
         }
     }
 
@@ -168,8 +161,10 @@ class MainActivity : Activity() {
 
         // Counted by BlockService; this screen updates live through prefsChanged.
         val count = prefs.getInt(KEY_BLOCKED_COUNT, 0)
-        stats.showIf(count > 0)
-        if (count > 0) {
+        if (count == 0) {
+            statsTotal.text = "0"
+            statsRecent.setText(R.string.stats_none)
+        } else {
             val since = DateUtils.formatDateTime(
                 this, prefs.getLong(KEY_FIRST_BLOCKED, 0), DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_ABBREV_MONTH)
             statsTotal.text = getString(R.string.stats_total_value, count, since)
@@ -193,7 +188,7 @@ class MainActivity : Activity() {
     private fun bind(view: Switch, key: String, checked: Boolean, enabled: Boolean) {
         view.setOnCheckedChangeListener(null)
         if (view.isChecked != checked) view.isChecked = checked
-        view.setOnCheckedChangeListener(saver(key))
+        view.setOnCheckedChangeListener { _, on -> saveSwitch(key, on) }
         if (view.isEnabled != enabled) {
             view.isEnabled = enabled
             view.jumpDrawablesToCurrentState()

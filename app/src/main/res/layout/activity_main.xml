@@ -10,86 +10,17 @@
         android:orientation="vertical"
         android:padding="24dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/app_name"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textSize="28sp" />
-
         <Switch
             android:id="@+id/toggle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:minHeight="48dp"
-            android:text="@string/toggle"
-            android:textAppearance="?android:attr/textAppearanceMedium" />
+            style="@style/SettingSwitch"
+            android:text="@string/toggle" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
             android:layout_marginTop="4dp"
-            android:textSize="14sp"
-            android:text="@string/description"
-            android:textColor="?android:attr/textColorSecondary" />
-
-        <!-- Hidden until something has been blocked. -->
-        <LinearLayout
-            android:id="@+id/stats"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:layout_marginBottom="8dp"
-                android:text="@string/blocked_calls"
-                android:textAllCaps="true"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <TableLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:stretchColumns="1"
-                android:shrinkColumns="1">
-
-                <TableRow android:paddingVertical="4dp">
-
-                    <TextView
-                        android:text="@string/stats_total"
-                        android:textAppearance="?android:attr/textAppearanceMedium"
-                        android:textSize="15sp" />
-
-                    <TextView
-                        android:id="@+id/stats_total"
-                        android:gravity="end"
-                        android:textAppearance="?android:attr/textAppearanceMedium"
-                        android:textSize="15sp" />
-                </TableRow>
-
-                <TableRow android:paddingVertical="4dp">
-
-                    <TextView
-                        android:text="@string/stats_recent"
-                        android:textAppearance="?android:attr/textAppearanceMedium"
-                        android:textSize="15sp" />
-
-                    <TextView
-                        android:id="@+id/stats_recent"
-                        android:autoLink="phone"
-                        android:gravity="end"
-                        android:textAppearance="?android:attr/textAppearanceMedium"
-                        android:textIsSelectable="true"
-                        android:textSize="15sp" />
-                </TableRow>
-            </TableLayout>
-        </LinearLayout>
+            android:text="@string/description" />
 
         <!-- Only shown once blocking can run; until then these switches couldn't do anything. -->
         <LinearLayout
@@ -99,46 +30,34 @@
             android:orientation="vertical">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                style="?android:attr/listSeparatorTextViewStyle"
                 android:layout_marginTop="32dp"
-                android:text="@string/options"
-                android:textAllCaps="true"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="13sp"
-                android:textStyle="bold" />
+                android:paddingStart="0dp"
+                android:text="@string/options" />
 
             <Switch
                 android:id="@+id/instant_decline"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                style="@style/SettingSwitch"
                 android:layout_marginTop="8dp"
-                android:minHeight="48dp"
-                android:text="@string/instant_decline"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:text="@string/instant_decline" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/instant_decline_desc"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="14sp" />
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:text="@string/instant_decline_desc" />
 
             <Switch
                 android:id="@+id/repeat_callers"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                style="@style/SettingSwitch"
                 android:layout_marginTop="8dp"
-                android:minHeight="48dp"
-                android:text="@string/repeat_callers"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:text="@string/repeat_callers" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/repeat_callers_desc"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="14sp" />
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:text="@string/repeat_callers_desc" />
 
             <!-- Android 13+ only. Always shown there: Android can't tell us whether the tile is
                  already added, and asking again just reports that it is. -->
@@ -159,15 +78,11 @@
             android:orientation="vertical">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                style="?android:attr/listSeparatorTextViewStyle"
                 android:layout_marginTop="32dp"
+                android:paddingStart="0dp"
                 android:layout_marginBottom="8dp"
-                android:text="@string/permissions"
-                android:textAllCaps="true"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="13sp"
-                android:textStyle="bold" />
+                android:text="@string/permissions" />
 
             <TableLayout
                 android:layout_width="match_parent"
@@ -205,18 +120,51 @@
             </TableLayout>
         </LinearLayout>
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
+        <TextView
+            style="?android:attr/listSeparatorTextViewStyle"
             android:layout_marginTop="32dp"
-            android:background="?android:attr/listDivider" />
+            android:paddingStart="0dp"
+            android:layout_marginBottom="8dp"
+            android:text="@string/blocked_calls" />
+
+        <TableLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:stretchColumns="1"
+            android:shrinkColumns="1">
+
+            <TableRow android:paddingVertical="4dp">
+
+                <TextView
+                    android:text="@string/stats_total"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+
+                <TextView
+                    android:id="@+id/stats_total"
+                    android:gravity="end"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+            </TableRow>
+
+            <TableRow android:paddingVertical="4dp">
+
+                <TextView
+                    android:text="@string/stats_recent"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+
+                <TextView
+                    android:id="@+id/stats_recent"
+                    android:autoLink="phone"
+                    android:gravity="end"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:textIsSelectable="true" />
+            </TableRow>
+        </TableLayout>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="32dp"
             android:text="@string/builtin_note"
-            android:textColor="?android:attr/textColorTertiary"
-            android:textSize="12sp" />
+            android:textAppearance="?android:attr/textAppearanceSmall" />
     </LinearLayout>
 </ScrollView>
