@@ -26,13 +26,18 @@ class BlockService : CallScreeningService() {
         val block = (number.isNullOrBlank() || !isContact(number)) &&
             !(allowRepeats && isRepeatCall(number, now))
         if (block) {
-            val count = prefs.getInt(KEY_BLOCKED_COUNT, 0)
+            val count = prefs.getInt(KEY_BLOCKED_COUNT, 0) + 1
             val edit = prefs.edit()
-            if (count == 0) edit.putLong(KEY_FIRST_BLOCKED, now)
-            edit.putInt(KEY_BLOCKED_COUNT, count + 1)
+            if (count == 1) edit.putLong(KEY_FIRST_BLOCKED, now)
+            edit.putInt(KEY_BLOCKED_COUNT, count)
                 .putLong(KEY_LAST_BLOCKED, now)
-                .putString(KEY_LAST_NUMBER, number?.ifBlank { null }) // null (removed) if hidden
+                .putBoolean(KEY_LAST_HIDDEN, number.isNullOrBlank())
                 .apply()
+            if (!number.isNullOrBlank() && prefs.getBoolean(KEY_NOTIFY, false) && canNotify()) {
+                notifyBlocked(number, now)
+            }
+        } else if (!number.isNullOrBlank()) {
+            dismissBlocked(number)
         }
         respondToCall(
             details,

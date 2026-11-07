@@ -14,8 +14,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.telephony.PhoneNumberUtils
-import android.telephony.TelephonyManager
 import android.text.format.DateUtils
 import android.view.View
 import android.view.WindowInsets
@@ -25,7 +23,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import java.text.DateFormat
-import java.util.Locale
 
 const val PREFS = "prefs"
 const val KEY_ENABLED = "enabled"
@@ -34,10 +31,12 @@ const val KEY_REPEAT_CALLERS = "repeat_callers"
 const val KEY_BLOCKED_COUNT = "blocked_count"
 const val KEY_FIRST_BLOCKED = "first_blocked"
 const val KEY_LAST_BLOCKED = "last_blocked"
-const val KEY_LAST_NUMBER = "last_number"
+const val KEY_LAST_HIDDEN = "last_hidden"
+const val KEY_NOTIFY = "notify"
 const val PREFS_RECENT = "recent_blocked"
 
 private const val REQ_ROLE = 1
+private const val REQ_NOTIFY = 2
 
 // Shared by the app and the Quick Settings tile. Turning off blocking
 // or repeat callers forgets all recently blocked numbers.
@@ -55,6 +54,7 @@ fun Context.hasRole() =
 
 class MainActivity : Activity() {
     private lateinit var toggle: Switch
+    private lateinit var notify: Switch
     private lateinit var instantDecline: Switch
     private lateinit var repeatCallers: Switch
     private lateinit var statsTotal: TextView
@@ -82,6 +82,7 @@ class MainActivity : Activity() {
         }
 
         toggle = findViewById(R.id.toggle)
+        notify = findViewById(R.id.notify)
         instantDecline = findViewById(R.id.instant_decline)
         repeatCallers = findViewById(R.id.repeat_callers)
         statsTotal = findViewById(R.id.stats_total)
@@ -123,6 +124,30 @@ class MainActivity : Activity() {
         if (requestCode == REQ_ROLE && !hasContacts()) requestContacts()
     }
 
+    // Turning notifications on asks for permission first, and is only saved once it's granted.
+    private fun setNotify(on: Boolean) {
+        when {
+            !on || canNotify() -> saveSwitch(KEY_NOTIFY, on)
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED ->
+                requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQ_NOTIFY)
+            else -> notificationsBlocked()
+        }
+        refresh() // undo the switch's own change until it's actually allowed
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        if (requestCode != REQ_NOTIFY) return
+        if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
+            saveSwitch(KEY_NOTIFY, true)
+        } else if (!shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+            notificationsBlocked()
+        }
+    }
+
+    private fun notificationsBlocked() =
+        Toast.makeText(this, R.string.notify_blocked_toast, Toast.LENGTH_LONG).show()
+
     override fun onDestroy() {
         prefs.unregisterOnSharedPreferenceChangeListener(prefsChanged)
         super.onDestroy()
@@ -156,6 +181,7 @@ class MainActivity : Activity() {
         // Show off whenever blocking cannot actually run, without overwriting the saved choice.
         val enabled = ready && prefs.getBoolean(KEY_ENABLED, true)
         bind(toggle, KEY_ENABLED, enabled, ready)
+        bind(notify, prefs.getBoolean(KEY_NOTIFY, false) && canNotify(), enabled, ::setNotify)
         bind(instantDecline, KEY_INSTANT_DECLINE, prefs.getBoolean(KEY_INSTANT_DECLINE, true), enabled)
         bind(repeatCallers, KEY_REPEAT_CALLERS, prefs.getBoolean(KEY_REPEAT_CALLERS, true), enabled)
 
@@ -172,10 +198,9 @@ class MainActivity : Activity() {
             // Just the time if it was today, otherwise the date.
             val last = DateUtils.formatSameDayTime(
                 prefs.getLong(KEY_LAST_BLOCKED, 0), System.currentTimeMillis(), DateFormat.MEDIUM, DateFormat.SHORT)
-            // Number (if not hidden) then time, each kept whole so the line only wraps between them.
-            // The em space also stops autoLink reading the time's digits as part of the number.
-            val number = prefs.getString(KEY_LAST_NUMBER, null)?.let(::formatNumber)
-            statsRecent.text = listOfNotNull(number, last.toString()).joinToString("\u2003") { it.noBreak() }
+            statsRecent.text = if (prefs.getBoolean(KEY_LAST_HIDDEN, false)) {
+                getString(R.string.stats_recent_hidden, last)
+            } else last
         }
 
         options.showIf(ready)
@@ -185,25 +210,18 @@ class MainActivity : Activity() {
     }
 
     // Detach the listener while setting state so only real taps are persisted.
-    private fun bind(view: Switch, key: String, checked: Boolean, enabled: Boolean) {
+    private fun bind(view: Switch, key: String, checked: Boolean, enabled: Boolean) =
+        bind(view, checked, enabled) { saveSwitch(key, it) }
+
+    private fun bind(view: Switch, checked: Boolean, enabled: Boolean, onChange: (Boolean) -> Unit) {
         view.setOnCheckedChangeListener(null)
         if (view.isChecked != checked) view.isChecked = checked
-        view.setOnCheckedChangeListener { _, on -> saveSwitch(key, on) }
+        view.setOnCheckedChangeListener { _, on -> onChange(on) }
         if (view.isEnabled != enabled) {
             view.isEnabled = enabled
             view.jumpDrawablesToCurrentState()
         }
     }
-
-    // Formats for the SIM's country, falling back to the number as received.
-    private fun formatNumber(number: String): String {
-        val country = getSystemService(TelephonyManager::class.java)?.simCountryIso
-            ?.takeIf { it.isNotEmpty() } ?: Locale.getDefault().country
-        return PhoneNumberUtils.formatNumber(number, country.uppercase()) ?: number
-    }
-
-    // Non-breaking spaces and hyphens, so text wraps as one piece.
-    private fun String.noBreak() = replace(' ', '\u00A0').replace('-', '\u2011')
 
     private fun View.showIf(show: Boolean) {
         visibility = if (show) View.VISIBLE else View.GONE

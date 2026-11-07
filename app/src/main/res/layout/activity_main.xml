@@ -36,6 +36,18 @@
                 android:text="@string/options" />
 
             <Switch
+                android:id="@+id/notify"
+                style="@style/SettingSwitch"
+                android:layout_marginTop="8dp"
+                android:text="@string/notify" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:text="@string/notify_desc" />
+
+            <Switch
                 android:id="@+id/instant_decline"
                 style="@style/SettingSwitch"
                 android:layout_marginTop="8dp"
@@ -153,10 +165,8 @@
 
                 <TextView
                     android:id="@+id/stats_recent"
-                    android:autoLink="phone"
                     android:gravity="end"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:textIsSelectable="true" />
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
             </TableRow>
         </TableLayout>
 

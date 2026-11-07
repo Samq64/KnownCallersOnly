@@ -4,6 +4,14 @@
     <string name="toggle">Enable</string>
     <string name="description">Blocks calls from anyone not in this device\'s contacts. Voicemail and apps such as WhatsApp are unaffected.</string>
     <string name="options">Options</string>
+    <string name="notify">Notify when blocked</string>
+    <string name="notify_desc">Shows a silent notification with the number, to call back or add to contacts. Hidden numbers are never shown.</string>
+    <string name="notify_blocked_toast">Notifications are turned off for this app. Allow them in App info.</string>
+    <string name="channel_blocked">Blocked calls</string>
+    <string name="notify_blocked">Blocked call</string>
+    <string name="call_back">Call back</string>
+    <string name="add_contact">Add contact</string>
+    <string name="no_app">No app found to do this</string>
     <string name="instant_decline">Decline instantly</string>
     <string name="instant_decline_desc">Callers go straight to voicemail or hear a busy tone or \"unavailable\" message. When off, they hear ringing until it times out.</string>
     <string name="repeat_callers">Allow repeat callers</string>
@@ -16,6 +24,7 @@
     <string name="stats_total">Total</string>
     <string name="stats_total_value">%1$d since %2$s</string>
     <string name="stats_recent">Last</string>
+    <string name="stats_recent_hidden">%1$s (hidden number)</string>
     <string name="stats_none">Never</string>
     <string name="permissions">Required permissions</string>
     <string name="perm_contacts">Contacts access</string>

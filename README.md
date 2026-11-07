@@ -14,18 +14,24 @@ be active at a time, so this app replaces any other (e.g. Truecaller).
 
 ## Options
 
-Both are on by default.
+### Notify when blocked
+
+Off by default. Shows a silent notification for each blocked call with the number and buttons to
+call back or add it to contacts. Calls from hidden numbers never get one. Turning it on asks for
+notification permission. Apart from the repeat caller window below, the app doesn't store blocked
+numbers, only a count and the time of the last block (and whether it was a hidden number).
 
 ### Decline instantly
 
-Blocked callers go straight to voicemail, or hear a busy tone or "unavailable" message, depending
-on the carrier. When off, they hear ringing until the call times out.
+On by default. Blocked callers go straight to voicemail, or hear a busy tone or "unavailable"
+message, depending on the carrier. When off, they hear ringing until the call times out.
 
 ### Allow repeat callers
 
-If the same number calls again within 15 minutes, the second call rings. The app remembers blocked
-numbers until the next incoming call after their 15 minutes are up, and forgets them straight away
-when this option or blocking is turned off. Hidden numbers never count as repeats.
+On by default. If the same number calls again within 15 minutes, the second call rings. The app
+remembers blocked numbers until the next incoming call after their 15 minutes are up, and forgets
+them straight away when this option or blocking is turned off. Hidden numbers never count as
+repeats.
 
 ## Limitations
 
