@@ -6,11 +6,11 @@ Blocked calls are still recorded in the call log, but some phone apps don't show
 
 ## How it works
 
-The app registers as Android's call screening app (`CallScreeningService`), which other apps
-can use from Android 10 onwards. For each incoming call it looks the number up in the device's
-contacts (including work-profile contacts where allowed) and blocks it if there's no match. A
-toggle in the app, or its Quick Settings tile, pauses blocking. Only one call screening app can
-be active at a time, so this app replaces any other (e.g. Truecaller).
+The app registers as Android's call screening app (`CallScreeningService`) which
+[skips contacts by default](https://android.googlesource.com/platform/packages/services/Telecomm/+/refs/heads/main/src/com/android/server/telecom/callfiltering/CallScreeningServiceFilter.java#290),
+so this app does not request the permission. A toggle in the app, or its Quick Settings tile,
+pauses blocking. Only one call screening app can be active at a time, so this app replaces any
+other (e.g. Truecaller).
 
 ## Options
 

@@ -23,8 +23,9 @@ class BlockService : CallScreeningService() {
         forgetOldNumbers(now)
         val allowRepeats = prefs.getBoolean(KEY_REPEAT_CALLERS, true)
         val number = details.handle?.schemeSpecificPart
-        val block = (number.isNullOrBlank() || !isContact(number)) &&
-            !(allowRepeats && isRepeatCall(number, now))
+        // CallScreeningService already filters contacts out since the app does not request READ_CONTACTS
+        // https://android.googlesource.com/platform/packages/services/Telecomm/+/refs/heads/main/src/com/android/server/telecom/callfiltering/CallScreeningServiceFilter.java#290
+        val block = (number.isNullOrBlank() || !(allowRepeats && isRepeatCall(number, now)))
         if (block) {
             val count = prefs.getInt(KEY_BLOCKED_COUNT, 0) + 1
             val edit = prefs.edit()
@@ -68,11 +69,4 @@ class BlockService : CallScreeningService() {
         return false
     }
 
-    private fun isContact(number: String): Boolean = try {
-        val uri = Uri.withAppendedPath(PhoneLookup.ENTERPRISE_CONTENT_FILTER_URI, Uri.encode(number))
-        contentResolver.query(uri, arrayOf(PhoneLookup._ID), null, null, null)
-            ?.use { it.count > 0 } ?: true
-    } catch (e: SecurityException) {
-        true // no contacts permission: fail rather than block everything
-    }
 }

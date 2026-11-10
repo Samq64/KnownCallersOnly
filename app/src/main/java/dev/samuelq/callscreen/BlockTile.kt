@@ -19,7 +19,7 @@ class BlockTile : TileService() {
         val tile = qsTile ?: return
         // Before the first unlock after boot, BlockService can't access contacts, so gray the tile out.
         val unlocked = getSystemService(UserManager::class.java).isUserUnlocked
-        val ready = unlocked && hasContacts() && hasRole()
+        val ready = unlocked && hasRole()
         val blocking = ready && prefs.getBoolean(KEY_ENABLED, true)
         tile.state = when {
             !ready -> Tile.STATE_UNAVAILABLE

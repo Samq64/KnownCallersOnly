@@ -47,8 +47,6 @@ fun Context.saveSwitch(key: String, on: Boolean) {
     }
 }
 
-fun Context.hasContacts() =
-    checkSelfPermission(Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
 fun Context.hasRole() =
     getSystemService(RoleManager::class.java).isRoleHeld(RoleManager.ROLE_CALL_SCREENING)
 
@@ -89,12 +87,8 @@ class MainActivity : Activity() {
         statsRecent = findViewById(R.id.stats_recent)
         options = findViewById(R.id.options)
         permissions = findViewById(R.id.permissions)
-        rowContacts = findViewById(R.id.row_contacts)
         rowRole = findViewById(R.id.row_role)
 
-        findViewById<Button>(R.id.open_app_info).setOnClickListener {
-            startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null)))
-        }
         findViewById<Button>(R.id.open_default_apps).setOnClickListener {
             startActivity(Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS))
         }
@@ -106,22 +100,11 @@ class MainActivity : Activity() {
         }
         prefs.registerOnSharedPreferenceChangeListener(prefsChanged)
 
-        // Ask for whatever is missing straight away, one dialog after the other.
         // Skipped when the activity is only being recreated (e.g. rotation)
-        if (savedInstanceState == null) {
-            if (!hasRole()) {
-                val intent = getSystemService(RoleManager::class.java).createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING)
-                startActivityForResult(intent, REQ_ROLE)
-            } else if (!hasContacts()) requestContacts()
+        if (savedInstanceState == null && !hasRole()) {
+            val intent = getSystemService(RoleManager::class.java).createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING)
+            startActivityForResult(intent, REQ_ROLE)
         }
-    }
-
-    private fun requestContacts() = requestPermissions(arrayOf(Manifest.permission.READ_CONTACTS), 0)
-
-    // Whatever the user chose for the role, move on to the contacts prompt.
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQ_ROLE && !hasContacts()) requestContacts()
     }
 
     // Turning notifications on asks for permission first, and is only saved once it's granted.
@@ -174,13 +157,11 @@ class MainActivity : Activity() {
     }
 
     private fun refresh() {
-        val hasContacts = hasContacts()
         val hasRole = hasRole()
-        val ready = hasContacts && hasRole
 
         // Show off whenever blocking cannot actually run, without overwriting the saved choice.
-        val enabled = ready && prefs.getBoolean(KEY_ENABLED, true)
-        bind(toggle, KEY_ENABLED, enabled, ready)
+        val enabled = hasRole && prefs.getBoolean(KEY_ENABLED, true)
+        bind(toggle, KEY_ENABLED, enabled, hasRole)
         bind(notify, prefs.getBoolean(KEY_NOTIFY, false) && canNotify(), enabled, ::setNotify)
         bind(instantDecline, KEY_INSTANT_DECLINE, prefs.getBoolean(KEY_INSTANT_DECLINE, true), enabled)
         bind(repeatCallers, KEY_REPEAT_CALLERS, prefs.getBoolean(KEY_REPEAT_CALLERS, true), enabled)
@@ -203,9 +184,8 @@ class MainActivity : Activity() {
             } else last
         }
 
-        options.showIf(ready)
-        permissions.showIf(!ready)
-        rowContacts.showIf(!hasContacts)
+        options.showIf(hasRole)
+        permissions.showIf(!hasRole)
         rowRole.showIf(!hasRole)
     }
 

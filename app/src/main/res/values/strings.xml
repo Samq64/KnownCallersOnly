@@ -27,7 +27,6 @@
     <string name="stats_recent_hidden">%1$s (hidden number)</string>
     <string name="stats_none">Never</string>
     <string name="permissions">Required permissions</string>
-    <string name="perm_contacts">Contacts access</string>
     <string name="perm_role">Caller ID &amp; spam app</string>
     <string name="app_info">App info</string>
     <string name="default_apps">Default apps</string>

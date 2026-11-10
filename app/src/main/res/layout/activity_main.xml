@@ -103,20 +103,6 @@
                 android:stretchColumns="0">
 
                 <TableRow
-                    android:id="@+id/row_contacts"
-                    android:gravity="center_vertical"
-                    android:minHeight="48dp">
-
-                    <TextView
-                        android:text="@string/perm_contacts"
-                        android:textAppearance="?android:attr/textAppearanceMedium" />
-
-                    <Button
-                        android:id="@+id/open_app_info"
-                        android:text="@string/app_info" />
-                </TableRow>
-
-                <TableRow
                     android:id="@+id/row_role"
                     android:gravity="center_vertical"
                     android:minHeight="48dp">
